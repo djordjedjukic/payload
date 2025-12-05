@@ -1,0 +1,159 @@
+import type { DatabaseAdapterObj, Payload } from 'payload'
+
+import { DocumentStore } from 'ravendb'
+import fs from 'fs'
+import path from 'path'
+import { createDatabaseAdapter, defaultBeginTransaction } from 'payload'
+
+import type { RavenDBAdapter, RavenDBAdapterArgs } from './types.js'
+
+import { connect } from './connect.js'
+import { init } from './init.js'
+import { destroy } from './destroy.js'
+import { count } from './count.js'
+import { countGlobalVersions } from './countGlobalVersions.js'
+import { countVersions } from './countVersions.js'
+import { create } from './create.js'
+import { createGlobal } from './createGlobal.js'
+import { createGlobalVersion } from './createGlobalVersion.js'
+import { createMigration } from './createMigration.js'
+import { createVersion } from './createVersion.js'
+import { deleteMany } from './deleteMany.js'
+import { deleteOne } from './deleteOne.js'
+import { deleteVersions } from './deleteVersions.js'
+import { find } from './find.js'
+import { findDistinct } from './findDistinct.js'
+import { findGlobal } from './findGlobal.js'
+import { findGlobalVersions } from './findGlobalVersions.js'
+import { findOne } from './findOne.js'
+import { findVersions } from './findVersions.js'
+import { queryDrafts } from './queryDrafts.js'
+import { beginTransaction } from './transactions/beginTransaction.js'
+import { commitTransaction } from './transactions/commitTransaction.js'
+import { rollbackTransaction } from './transactions/rollbackTransaction.js'
+import { updateGlobal } from './updateGlobal.js'
+import { updateGlobalVersion } from './updateGlobalVersion.js'
+import { updateMany } from './updateMany.js'
+import { updateOne } from './updateOne.js'
+import { updateVersion } from './updateVersion.js'
+import { resolveRelationships } from './utilities/resolveRelationships.js'
+
+export type { RavenDBAdapter, RavenDBAdapterArgs } from './types.js'
+
+declare module 'payload' {
+  export interface DatabaseAdapter extends RavenDBAdapter {}
+}
+
+export function ravendbAdapter({
+  url,
+  database,
+  certificate,
+  authOptions,
+  migrationDir: migrationDirArg,
+  prodMigrations,
+  transactionOptions = {},
+  allowIDOnCreate = false,
+}: RavenDBAdapterArgs): DatabaseAdapterObj {
+  function adapter({ payload }: { payload: Payload }) {
+    const migrationDir = findMigrationDir(migrationDirArg)
+
+    // create document store
+    const store = Array.isArray(url)
+      ? new DocumentStore(url, database)
+      : new DocumentStore(url, database)
+
+    // configure authentication if provided
+    if (certificate || authOptions?.certificate) {
+      const cert = certificate || authOptions?.certificate
+      if (cert) {
+        // @ts-expect-error - certificate property exists but not in types
+        store.certificate = typeof cert === 'string' ? Buffer.from(cert) : cert
+      }
+    }
+
+    return createDatabaseAdapter<RavenDBAdapter>({
+      name: 'ravendb',
+
+      // RavenDB-specific
+      store,
+      database,
+      sessions: {},
+      transactionOptions: transactionOptions === false ? false : transactionOptions,
+      prodMigrations,
+
+      // DatabaseAdapter
+      allowIDOnCreate,
+      beginTransaction: transactionOptions === false ? defaultBeginTransaction() : beginTransaction,
+      commitTransaction,
+      connect,
+      count,
+      countGlobalVersions,
+      countVersions,
+      create,
+      createGlobal,
+      createGlobalVersion,
+      createMigration,
+      createVersion,
+      defaultIDType: 'text',
+      deleteMany,
+      deleteOne,
+      deleteVersions,
+      destroy,
+      find,
+      findDistinct,
+      findGlobal,
+      findGlobalVersions,
+      findOne,
+      findVersions,
+      init,
+      migrationDir,
+      packageName: '@payloadcms/db-ravendb',
+      payload,
+      queryDrafts,
+      resolveRelationships,
+      rollbackTransaction,
+      updateGlobal,
+      updateGlobalVersion,
+      updateMany,
+      updateOne,
+      updateVersion,
+      upsert: updateOne,
+    })
+  }
+
+  return {
+    name: 'ravendb',
+    allowIDOnCreate,
+    defaultIDType: 'text',
+    init: adapter,
+  }
+}
+
+/**
+ * Attempt to find migrations directory.
+ */
+function findMigrationDir(migrationDir?: string): string {
+  const cwd = process.cwd()
+  const srcDir = path.resolve(cwd, 'src/migrations')
+  const distDir = path.resolve(cwd, 'dist/migrations')
+  const relativeMigrations = path.resolve(cwd, 'migrations')
+
+  if (migrationDir) {
+    return migrationDir
+  }
+
+  if (fs.existsSync(srcDir)) {
+    return srcDir
+  }
+
+  if (fs.existsSync(distDir)) {
+    return distDir
+  }
+
+  if (fs.existsSync(relativeMigrations)) {
+    return relativeMigrations
+  }
+
+  return srcDir
+}
+
