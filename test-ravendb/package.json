@@ -1,0 +1,10 @@
+{
+  "name": "test-ravendb",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "payload dev",
+    "build": "payload build"
+  }
+}
+

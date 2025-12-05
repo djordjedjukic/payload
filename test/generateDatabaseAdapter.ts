@@ -129,6 +129,13 @@ import { sqliteD1Adapter } from '@payloadcms/db-d1-sqlite'
 
 export const databaseAdapter = sqliteD1Adapter({ binding: global.d1 })
   `,
+  ravendb: `
+  import { ravendbAdapter } from '@payloadcms/db-ravendb'
+
+  export const databaseAdapter = ravendbAdapter({
+    url: process.env.RAVENDB_URL || 'http://localhost:8082',
+    database: process.env.RAVENDB_DATABASE || 'PayloadTest',
+  })`,
 }
 
 /**
