@@ -2,9 +2,11 @@ import type { Field, FlattenedField } from 'payload'
 
 import type { RavenDBAdapter } from '../types.js'
 
+import { extractIDFromRavenID } from './extractIDFromRavenID.js'
+
 interface TransformArgs {
   adapter: RavenDBAdapter
-  data: Record<string, unknown> | object
+  data: object | Record<string, unknown>
   fields: Field[] | FlattenedField[]
   operation: 'read' | 'write'
 }
@@ -27,22 +29,16 @@ export function transform({ adapter, data, fields, operation }: TransformArgs): 
       doc.updatedAt = new Date().toISOString()
     }
   } else if (operation === 'read') {
-    // transform RavenDB data to Payload format
-    // RavenDB stores the document ID in @metadata['@id']
-    // we need to extract it to the id field
-    if (doc['@metadata'] && doc['@metadata']['@id']) {
-      const fullId = doc['@metadata']['@id'] as string
-      // extract just the ID part (after the collection name and /)
-      const parts = fullId.split('/')
-      if (parts.length > 1) {
-        doc.id = parts[parts.length - 1]
-      } else {
-        doc.id = fullId
-      }
+    const metadataID = doc['@metadata']?.['@id']
 
-      // clean up metadata from the result
+    if (metadataID) {
+      doc.id = extractIDFromRavenID(metadataID)
+    } else if (doc.id) {
+      doc.id = extractIDFromRavenID(doc.id)
+    }
+
+    if (doc['@metadata']) {
       delete doc['@metadata']
     }
   }
 }
-

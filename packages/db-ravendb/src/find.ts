@@ -2,10 +2,10 @@ import type { Find, PaginatedDocs } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
+import { buildQuery } from './queries/buildQuery.js'
+import { getCollectionName } from './utilities/getCollectionName.js'
 import { getSession } from './utilities/getSession.js'
 import { transform } from './utilities/transform.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
-import { buildQuery } from './queries/buildQuery.js'
 
 export const find: Find = async function find(
   this: RavenDBAdapter,
@@ -22,7 +22,16 @@ export const find: Find = async function find(
     where = {},
   },
 ) {
-  console.log('[RavenDB] find called for collection:', collectionSlug, 'pagination:', pagination, 'limit:', limit, 'page:', page)
+  console.log(
+    '[RavenDB] find called for collection:',
+    collectionSlug,
+    'pagination:',
+    pagination,
+    'limit:',
+    limit,
+    'page:',
+    page,
+  )
 
   const collectionConfig = this.payload.collections[collectionSlug].config
 
@@ -54,7 +63,7 @@ export const find: Find = async function find(
     // apply sorting
     if (sortArg) {
       let sortField: string
-      let sortOrder: 'asc' | 'desc' | 1 | -1
+      let sortOrder: 'asc' | 'desc' | -1 | 1
 
       if (typeof sortArg === 'string') {
         // handle string format like "name" or "-name"
@@ -71,7 +80,7 @@ export const find: Find = async function find(
         sortOrder = sortArg[sortField]
       }
 
-      console.log('[RavenDB] Applying sort:', { sortField, sortOrder, sortArg })
+      console.log('[RavenDB] Applying sort:', { sortArg, sortField, sortOrder })
 
       if (sortOrder === 'desc' || sortOrder === -1) {
         query = query.orderByDescending(sortField)
@@ -121,7 +130,7 @@ export const find: Find = async function find(
     }
 
     // transform all docs
-    docs.forEach(doc => {
+    docs.forEach((doc) => {
       transform({ adapter: this, data: doc, fields: collectionConfig.fields, operation: 'read' })
     })
 
@@ -169,10 +178,10 @@ export const find: Find = async function find(
     }
 
     console.log('[RavenDB] Returning result:', {
-      docsLength: result.docs?.length,
       docsIsArray: Array.isArray(result.docs),
-      totalDocs: result.totalDocs,
+      docsLength: result.docs?.length,
       page: result.page,
+      totalDocs: result.totalDocs,
     })
 
     return result
@@ -183,4 +192,3 @@ export const find: Find = async function find(
     throw error
   }
 }
-

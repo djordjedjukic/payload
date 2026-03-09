@@ -1,9 +1,14 @@
-import type { FindVersions, PaginatedDocs } from 'payload'
+import { buildVersionCollectionFields, type FindVersions, type PaginatedDocs } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
 import { getSession } from './utilities/getSession.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
+import { transform } from './utilities/transform.js'
+import {
+  filterVersionDocs,
+  loadVersionDocs,
+  sortVersionDocs,
+} from './utilities/versionDocuments.js'
 
 export const findVersions: FindVersions = async function findVersions(
   this: RavenDBAdapter,
@@ -26,33 +31,37 @@ export const findVersions: FindVersions = async function findVersions(
       session = this.store.openSession(this.database)
     }
 
-    const collectionName = getCollectionName(`${collectionSlug}_versions`)
+    const collectionConfig = this.payload.collections[collectionSlug].config
+    const versionFields = buildVersionCollectionFields(this.payload.config, collectionConfig, true)
 
-    let query = session.query({ collection: collectionName })
+    let docs = await loadVersionDocs({ collectionSlug, session })
+    docs = await filterVersionDocs({
+      adapter: this,
+      collectionSlug,
+      docs,
+      fields: versionFields,
+      locale,
+      where,
+    })
+    docs = sortVersionDocs(docs, sortArg || '-updatedAt')
 
-    // apply sorting
-    if (sortArg) {
-      const sortField = typeof sortArg === 'string' ? sortArg : Object.keys(sortArg)[0]
-      const sortOrder = typeof sortArg === 'string' ? 'asc' : sortArg[sortField]
-      
-      if (sortOrder === 'desc' || sortOrder === -1) {
-        query = query.orderByDescending(sortField)
-      } else {
-        query = query.orderBy(sortField)
-      }
-    }
-
-    const totalQuery = session.query({ collection: collectionName })
-    const totalDocs = await totalQuery.count()
+    const totalDocs = docs.length
 
     if (pagination) {
       const skip = (page - 1) * limit
-      query = query.skip(skip).take(limit)
+      docs = docs.slice(skip, skip + limit)
     } else if (limit > 0) {
-      query = query.take(limit)
+      docs = docs.slice(0, limit)
     }
 
-    const docs = await query.all()
+    for (const doc of docs) {
+      transform({
+        adapter: this,
+        data: doc,
+        fields: versionFields,
+        operation: 'read',
+      })
+    }
 
     if (shouldCloseSession) {
       session.dispose()
@@ -98,4 +107,3 @@ export const findVersions: FindVersions = async function findVersions(
     throw error
   }
 }
-

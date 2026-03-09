@@ -2,9 +2,9 @@ import type { UpdateMany } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
 import { buildQuery } from './queries/buildQuery.js'
+import { getCollectionName } from './utilities/getCollectionName.js'
+import { getSession } from './utilities/getSession.js'
 import { transform } from './utilities/transform.js'
 
 export const updateMany: UpdateMany = async function updateMany(
@@ -29,10 +29,10 @@ export const updateMany: UpdateMany = async function updateMany(
     if (where) {
       query = buildQuery({
         adapter: this,
-        query,
-        where,
         fields: collectionConfig.flattenedFields,
         locale: req?.locale,
+        query,
+        where,
       }) as any
     }
 
@@ -73,11 +73,9 @@ export const updateMany: UpdateMany = async function updateMany(
     }
 
     return updatedDocs as any
-
   } finally {
     if (shouldCloseSession && session) {
       session.dispose()
     }
   }
 }
-

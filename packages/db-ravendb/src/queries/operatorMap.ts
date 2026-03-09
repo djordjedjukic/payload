@@ -3,6 +3,7 @@ export type OperatorMapKey = keyof typeof operatorMap
 // map Payload operators to internal query operators
 export const operatorMap = {
   all: '$all',
+  contains: 'contains',
   equals: '$eq',
   exists: '$exists',
   greater_than: '$gt',
@@ -11,12 +12,10 @@ export const operatorMap = {
   intersects: '$geoIntersects',
   less_than: '$lt',
   less_than_equal: '$lte',
+  like: 'like',
   near: '$near',
   not_equals: '$ne',
   not_in: '$nin',
-  within: '$geoWithin',
-  like: 'like',
   not_like: 'not_like',
-  contains: 'contains',
+  within: '$geoWithin',
 }
-

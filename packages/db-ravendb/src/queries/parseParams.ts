@@ -33,13 +33,13 @@ export async function parseParams({
     for (const relationOrPath of Object.keys(where)) {
       const condition = where[relationOrPath]
       let conditionOperator: '$and' | '$or' | null = null
-      
+
       if (relationOrPath.toLowerCase() === 'and') {
         conditionOperator = '$and'
       } else if (relationOrPath.toLowerCase() === 'or') {
         conditionOperator = '$or'
       }
-      
+
       if (Array.isArray(condition)) {
         const builtConditions = await buildAndOrConditions({
           adapter,
@@ -50,21 +50,21 @@ export async function parseParams({
           parentIsLocalized,
           where: condition,
         })
-        
+
         if (builtConditions.length > 0 && conditionOperator !== null) {
           result[conditionOperator] = builtConditions
         }
       } else {
         // it's a path - there can be multiple comparisons on a single path
         const pathOperators = where[relationOrPath]
-        
+
         if (typeof pathOperators === 'object') {
           const validOperators = Object.keys(pathOperators).filter((operator) =>
             validOperatorSet.has(operator as Operator),
           )
 
           for (const operator of validOperators) {
-            const searchParam = await buildSearchParam({
+            const searchParam = buildSearchParam({
               adapter,
               collectionSlug,
               fields,
@@ -112,4 +112,3 @@ export async function parseParams({
 
   return result
 }
-

@@ -2,8 +2,8 @@ import type { DeleteOne } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
 import { getCollectionName } from './utilities/getCollectionName.js'
+import { getSession } from './utilities/getSession.js'
 
 export const deleteOne: DeleteOne = async function deleteOne(
   this: RavenDBAdapter,
@@ -21,10 +21,14 @@ export const deleteOne: DeleteOne = async function deleteOne(
 
     const collectionName = getCollectionName(collectionSlug)
 
-    let docId: string | null = null
+    let docId: null | string = null
 
     if (where.id && typeof where.id === 'object' && 'equals' in where.id) {
-      docId = `${collectionName}/${where.id.equals}`
+      const equals = where.id.equals
+
+      if (typeof equals === 'number' || typeof equals === 'string') {
+        docId = `${collectionName}/${String(equals)}`
+      }
     }
 
     if (!docId) {
@@ -42,7 +46,7 @@ export const deleteOne: DeleteOne = async function deleteOne(
     }
 
     // delete the document
-    session.delete(docId)
+    await session.delete(docId)
 
     if (shouldCloseSession) {
       await session.saveChanges()
@@ -57,4 +61,3 @@ export const deleteOne: DeleteOne = async function deleteOne(
     throw error
   }
 }
-

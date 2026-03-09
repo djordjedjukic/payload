@@ -10,13 +10,12 @@ export const rollbackTransaction: RollbackTransaction = async function rollbackT
   const sessionWrapper = this.sessions[transactionID]
 
   if (!sessionWrapper) {
-    throw new Error(`Transaction ${transactionID} not found`)
+    return
   }
 
-  // call the reject function to dispose without saving
-  await sessionWrapper.reject()
-
-  // remove from sessions
-  delete this.sessions[transactionID]
+  try {
+    await sessionWrapper.reject()
+  } finally {
+    delete this.sessions[transactionID]
+  }
 }
-

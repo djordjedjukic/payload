@@ -2,12 +2,12 @@ import type { DeleteVersions } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
 import { getCollectionName } from './utilities/getCollectionName.js'
+import { getSession } from './utilities/getSession.js'
 
 export const deleteVersions: DeleteVersions = async function deleteVersions(
   this: RavenDBAdapter,
-  { collection: collectionSlug, locale, req, where },
+  { collection: collectionSlug, locale: _locale, req, where: _where },
 ) {
   let session = await getSession(this, req)
   const shouldCloseSession = !session
@@ -23,11 +23,13 @@ export const deleteVersions: DeleteVersions = async function deleteVersions(
 
     const docs = await query.all()
 
-    docs.forEach(doc => {
-      if (doc['@metadata'] && doc['@metadata']['@id']) {
-        session.delete(doc['@metadata']['@id'])
+    for (const doc of docs) {
+      const id = doc?.['@metadata']?.['@id']
+
+      if (typeof id === 'string') {
+        await session.delete(id)
       }
-    })
+    }
 
     if (shouldCloseSession) {
       await session.saveChanges()
@@ -40,4 +42,3 @@ export const deleteVersions: DeleteVersions = async function deleteVersions(
     throw error
   }
 }
-

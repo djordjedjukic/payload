@@ -2,23 +2,14 @@ import type { UpdateOne } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
+import { getCollectionName } from './utilities/getCollectionName.js'
 import { getSession } from './utilities/getSession.js'
 import { handleError } from './utilities/handleError.js'
 import { transform } from './utilities/transform.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
 
 export const updateOne: UpdateOne = async function updateOne(
   this: RavenDBAdapter,
-  {
-    id,
-    collection: collectionSlug,
-    data,
-    locale,
-    req,
-    returning,
-    select,
-    where: whereArg = {},
-  },
+  { id, collection: collectionSlug, data, locale, req, returning, select, where: whereArg = {} },
 ) {
   const collectionConfig = this.payload.collections[collectionSlug].config
   const where = id ? { id: { equals: id } } : whereArg
@@ -34,7 +25,7 @@ export const updateOne: UpdateOne = async function updateOne(
     const collectionName = getCollectionName(collectionSlug)
 
     // find the document to update
-    let docId: string | null = null
+    let docId: null | string = null
 
     if (where.id && typeof where.id === 'object' && 'equals' in where.id) {
       const idValue = String(where.id.equals)
@@ -107,4 +98,3 @@ export const updateOne: UpdateOne = async function updateOne(
     handleError({ collection: collectionSlug, error, req })
   }
 }
-

@@ -1,12 +1,11 @@
 import type { FlattenedField, Operator, PathToQuery } from 'payload'
 
-import { getFieldByPath, getLocalizedPaths } from 'payload'
+import { getLocalizedPaths } from 'payload'
 import { validOperatorSet } from 'payload/shared'
 
 import type { RavenDBAdapter } from '../types.js'
 import type { OperatorMapKey } from './operatorMap.js'
 
-import { getCollectionName } from '../utilities/getCollectionName.js'
 import { operatorMap } from './operatorMap.js'
 import { sanitizeQueryValue } from './sanitizeQueryValue.js'
 
@@ -19,7 +18,7 @@ type SearchParam = {
 /**
  * Convert the Payload key / value / operator into a RavenDB query condition
  */
-export async function buildSearchParam({
+export function buildSearchParam({
   adapter,
   collectionSlug,
   fields,
@@ -39,7 +38,7 @@ export async function buildSearchParam({
   operator: string
   parentIsLocalized: boolean
   val: unknown
-}): Promise<SearchParam | undefined> {
+}): SearchParam | undefined {
   // replace GraphQL nested field double underscore formatting
   let sanitizedPath = incomingPath.replace(/__/g, '.')
 
@@ -153,8 +152,8 @@ export async function buildSearchParam({
           value: {
             $and: words.map((word) => ({
               [path]: {
-                $regex: word.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
                 $options: 'i',
+                $regex: word.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
               },
             })),
           },
@@ -172,8 +171,8 @@ export async function buildSearchParam({
             $and: words.map((word) => ({
               [path]: {
                 $not: {
-                  $regex: word.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
                   $options: 'i',
+                  $regex: word.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
                 },
               },
             })),
@@ -188,8 +187,8 @@ export async function buildSearchParam({
         return {
           path,
           value: {
-            $regex: formattedValue.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
             $options: 'i',
+            $regex: formattedValue.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&'),
           },
         }
       }
@@ -212,4 +211,3 @@ export async function buildSearchParam({
 
   return undefined
 }
-

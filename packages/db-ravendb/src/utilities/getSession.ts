@@ -1,5 +1,5 @@
-import type { IDocumentSession } from 'ravendb'
 import type { PayloadRequest } from 'payload'
+import type { IDocumentSession } from 'ravendb'
 
 import type { RavenDBAdapter } from '../types.js'
 
@@ -20,4 +20,3 @@ export async function getSession(
 
   return undefined
 }
-

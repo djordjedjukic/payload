@@ -4,10 +4,10 @@ import { v4 as uuid } from 'uuid'
 
 import type { RavenDBAdapter } from './types.js'
 
+import { getCollectionName } from './utilities/getCollectionName.js'
 import { getSession } from './utilities/getSession.js'
 import { handleError } from './utilities/handleError.js'
 import { transform } from './utilities/transform.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
 
 export const create: Create = async function create(
   this: RavenDBAdapter,
@@ -18,7 +18,14 @@ export const create: Create = async function create(
   let session = await getSession(this, req)
   const shouldCloseSession = !session
 
-  console.log('[RavenDB] create - shouldCloseSession:', shouldCloseSession, 'hasSession:', !!session, 'transactionID:', req?.transactionID)
+  console.log(
+    '[RavenDB] create - shouldCloseSession:',
+    shouldCloseSession,
+    'hasSession:',
+    !!session,
+    'transactionID:',
+    req?.transactionID,
+  )
 
   try {
     if (!session) {
@@ -52,7 +59,12 @@ export const create: Create = async function create(
     const collectionName = getCollectionName(collectionSlug)
     const fullId = `${collectionName}/${docId}`
 
-    console.log('[RavenDB] Creating document:', { collectionSlug, collectionName, fullId, hasData: !!data })
+    console.log('[RavenDB] Creating document:', {
+      collectionName,
+      collectionSlug,
+      fullId,
+      hasData: !!data,
+    })
 
     // ensure @metadata exists and set the collection
     if (!data['@metadata']) {
@@ -97,4 +109,3 @@ export const create: Create = async function create(
     handleError({ collection: collectionSlug, error, req })
   }
 }
-

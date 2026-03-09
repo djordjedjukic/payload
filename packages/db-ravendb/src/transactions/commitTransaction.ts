@@ -10,20 +10,15 @@ export const commitTransaction: CommitTransaction = async function commitTransac
   const sessionWrapper = this.sessions[transactionID]
 
   if (!sessionWrapper) {
-    throw new Error(`Transaction ${transactionID} not found`)
+    return
   }
 
   try {
-    // call the resolve function to save changes
     await sessionWrapper.resolve()
-
-    // remove from sessions
-    delete this.sessions[transactionID]
   } catch (error) {
-    // if commit fails, reject and clean up
     await sessionWrapper.reject()
-    delete this.sessions[transactionID]
     throw error
+  } finally {
+    delete this.sessions[transactionID]
   }
 }
-

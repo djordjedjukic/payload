@@ -2,13 +2,12 @@ import type { DeleteMany } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
 import { getCollectionName } from './utilities/getCollectionName.js'
-import { buildQuery } from './queries/buildQuery.js'
+import { getSession } from './utilities/getSession.js'
 
 export const deleteMany: DeleteMany = async function deleteMany(
   this: RavenDBAdapter,
-  { collection: collectionSlug, req, where },
+  { collection: collectionSlug, req, where: _where },
 ) {
   let session = await getSession(this, req)
   const shouldCloseSession = !session
@@ -27,11 +26,13 @@ export const deleteMany: DeleteMany = async function deleteMany(
     const docs = await query.all()
 
     // delete all matching documents
-    docs.forEach(doc => {
-      if (doc['@metadata'] && doc['@metadata']['@id']) {
-        session.delete(doc['@metadata']['@id'])
+    for (const doc of docs) {
+      const id = doc?.['@metadata']?.['@id']
+
+      if (typeof id === 'string') {
+        await session.delete(id)
       }
-    })
+    }
 
     if (shouldCloseSession) {
       await session.saveChanges()
@@ -46,4 +47,3 @@ export const deleteMany: DeleteMany = async function deleteMany(
     throw error
   }
 }
-

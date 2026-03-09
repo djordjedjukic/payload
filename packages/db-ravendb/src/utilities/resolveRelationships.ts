@@ -10,11 +10,11 @@ import { transform } from './transform.js'
 export type ResolveRelationshipsArgs = {
   adapter: RavenDBAdapter
   collectionSlug: string
+  depth?: number
   docs: Record<string, unknown>[]
   fields: FlattenedField[]
   joins?: JoinQuery
   locale?: string
-  depth?: number
 }
 
 /**
@@ -24,11 +24,11 @@ export type ResolveRelationshipsArgs = {
 export async function resolveRelationships({
   adapter,
   collectionSlug,
+  depth = 1,
   docs,
   fields,
   joins,
   locale,
-  depth = 1,
 }: ResolveRelationshipsArgs): Promise<void> {
   if (!docs || docs.length === 0 || depth === 0) {
     return
@@ -37,8 +37,7 @@ export async function resolveRelationships({
   // find all relationship fields
   const relationshipFields = fields.filter(
     (field) =>
-      fieldAffectsData(field) &&
-      (field.type === 'relationship' || field.type === 'upload'),
+      fieldAffectsData(field) && (field.type === 'relationship' || field.type === 'upload'),
   )
 
   if (relationshipFields.length === 0) {
@@ -71,9 +70,9 @@ export async function resolveRelationships({
 
             // load the related document
             const relatedDoc = await loadRelatedDocument({
+              id: item,
               adapter,
               field,
-              id: item,
               session,
             })
 
@@ -95,9 +94,9 @@ export async function resolveRelationships({
 
           // load the related document
           const relatedDoc = await loadRelatedDocument({
+            id: fieldValue,
             adapter,
             field,
-            id: fieldValue,
             session,
           })
 
@@ -114,16 +113,16 @@ export async function resolveRelationships({
 }
 
 async function loadRelatedDocument({
+  id,
   adapter,
   field,
-  id,
   session,
 }: {
   adapter: RavenDBAdapter
   field: FlattenedField
   id: any
   session: any
-}): Promise<Record<string, unknown> | null> {
+}): Promise<null | Record<string, unknown>> {
   try {
     // determine which collection to load from
     let relationTo: string
@@ -192,4 +191,3 @@ async function loadRelatedDocument({
     return null
   }
 }
-

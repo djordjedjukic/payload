@@ -27,7 +27,9 @@ export const connect: Connect = async function connect(
       if (err.name === 'DatabaseDoesNotExistException') {
         // create database
         this.payload.logger.info(`Creating database: ${this.database}`)
-        await this.store.maintenance.server.send(new CreateDatabaseOperation({ databaseName: this.database }))
+        await this.store.maintenance.server.send(
+          new CreateDatabaseOperation({ databaseName: this.database }),
+        )
       } else {
         throw err
       }
@@ -41,18 +43,18 @@ export const connect: Connect = async function connect(
 
         try {
           // drop the entire database and recreate it
-          const { DeleteDatabasesOperation, CreateDatabaseOperation } = await import('ravendb')
+          const { CreateDatabaseOperation, DeleteDatabasesOperation } = await import('ravendb')
 
           await this.store.maintenance.server.send(
             new DeleteDatabasesOperation({
               databaseNames: [this.database],
               hardDelete: true,
-            })
+            }),
           )
 
           // recreate the database
           await this.store.maintenance.server.send(
-            new CreateDatabaseOperation({ databaseName: this.database })
+            new CreateDatabaseOperation({ databaseName: this.database }),
           )
 
           this.payload.logger.info('---- DROPPED DATABASE ----')
@@ -82,4 +84,3 @@ export const connect: Connect = async function connect(
     process.exit(1)
   }
 }
-

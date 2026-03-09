@@ -1,21 +1,11 @@
-import type { DocumentStore, IDocumentSession } from 'ravendb'
 import type { BaseDatabaseAdapter, Migration } from 'payload'
+import type { DocumentStore, IDocumentSession } from 'ravendb'
 
 export interface RavenDBAdapterArgs {
   /**
-   * The URL(s) to your RavenDB server(s)
+   * Enable this flag if you want to pass your own ID to create operations
    */
-  url: string | string[]
-
-  /**
-   * The name of the database to use
-   */
-  database: string
-
-  /**
-   * Optional certificate for secure connections
-   */
-  certificate?: Buffer | string
+  allowIDOnCreate?: boolean
 
   /**
    * Optional authentication options
@@ -24,6 +14,16 @@ export interface RavenDBAdapterArgs {
     certificate?: Buffer | string
     type?: 'certificate' | 'none'
   }
+
+  /**
+   * Optional certificate for secure connections
+   */
+  certificate?: Buffer | string
+
+  /**
+   * The name of the database to use
+   */
+  database: string
 
   /**
    * Migration directory path
@@ -41,14 +41,15 @@ export interface RavenDBAdapterArgs {
   transactionOptions?: false | Record<string, unknown>
 
   /**
-   * Enable this flag if you want to pass your own ID to create operations
+   * The URL(s) to your RavenDB server(s)
    */
-  allowIDOnCreate?: boolean
+  url: string | string[]
 }
 
 export interface RavenDBAdapter extends BaseDatabaseAdapter {
-  store: DocumentStore
   database: string
+  prodMigrations?: Migration[]
+  resolveRelationships?: (args: any) => Promise<void>
   sessions: {
     [id: string]: {
       db: IDocumentSession
@@ -56,9 +57,8 @@ export interface RavenDBAdapter extends BaseDatabaseAdapter {
       resolve: () => Promise<void>
     }
   }
+  store: DocumentStore
   transactionOptions: false | Record<string, unknown>
-  prodMigrations?: Migration[]
-  resolveRelationships?: (args: any) => Promise<void>
 }
 
 export interface MigrateUpArgs {
@@ -70,4 +70,3 @@ export interface MigrateDownArgs {
   payload: any
   req?: any
 }
-

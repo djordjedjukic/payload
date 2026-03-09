@@ -18,7 +18,7 @@ export const updateGlobalVersion: UpdateGlobalVersion = async function updateGlo
       session = this.store.openSession(this.database)
     }
 
-    let docId: string | null = null
+    let docId: null | string = null
 
     if (where.id && typeof where.id === 'object' && 'equals' in where.id) {
       docId = `globals_versions/${globalSlug}/${where.id.equals}`
@@ -57,4 +57,3 @@ export const updateGlobalVersion: UpdateGlobalVersion = async function updateGlo
     throw error
   }
 }
-

@@ -2,8 +2,8 @@ import type { Count } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
 import { getCollectionName } from './utilities/getCollectionName.js'
+import { getSession } from './utilities/getSession.js'
 
 export const count: Count = async function count(
   this: RavenDBAdapter,
@@ -39,4 +39,3 @@ export const count: Count = async function count(
     throw error
   }
 }
-

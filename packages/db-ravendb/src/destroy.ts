@@ -2,10 +2,10 @@ import type { Destroy } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-export const destroy: Destroy = async function destroy(this: RavenDBAdapter) {
+export const destroy: Destroy = function destroy(this: RavenDBAdapter) {
   try {
     // dispose all active sessions
-    Object.values(this.sessions).forEach(sessionWrapper => {
+    Object.values(this.sessions).forEach((sessionWrapper) => {
       if (sessionWrapper) {
         sessionWrapper.db.dispose()
       }
@@ -30,5 +30,6 @@ export const destroy: Destroy = async function destroy(this: RavenDBAdapter) {
       msg: 'Error closing RavenDB connection',
     })
   }
-}
 
+  return Promise.resolve()
+}

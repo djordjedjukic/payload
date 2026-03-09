@@ -1,9 +1,9 @@
-import type { CountVersions } from 'payload'
+import { buildVersionCollectionFields, type CountVersions } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
 import { getSession } from './utilities/getSession.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
+import { filterVersionDocs, loadVersionDocs } from './utilities/versionDocuments.js'
 
 export const countVersions: CountVersions = async function countVersions(
   this: RavenDBAdapter,
@@ -17,11 +17,19 @@ export const countVersions: CountVersions = async function countVersions(
       session = this.store.openSession(this.database)
     }
 
-    const collectionName = getCollectionName(`${collectionSlug}_versions`)
+    const collectionConfig = this.payload.collections[collectionSlug].config
+    const versionFields = buildVersionCollectionFields(this.payload.config, collectionConfig, true)
 
-    const query = session.query({ collection: collectionName })
+    const docs = await filterVersionDocs({
+      adapter: this,
+      collectionSlug,
+      docs: await loadVersionDocs({ collectionSlug, session }),
+      fields: versionFields,
+      locale,
+      where,
+    })
 
-    const totalDocs = await query.count()
+    const totalDocs = docs.length
 
     if (shouldCloseSession) {
       session.dispose()
@@ -37,4 +45,3 @@ export const countVersions: CountVersions = async function countVersions(
     throw error
   }
 }
-

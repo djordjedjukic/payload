@@ -1,15 +1,13 @@
 import type { DatabaseAdapterObj, Payload } from 'payload'
 
-import { DocumentStore } from 'ravendb'
 import fs from 'fs'
 import path from 'path'
 import { createDatabaseAdapter, defaultBeginTransaction } from 'payload'
+import { DocumentStore } from 'ravendb'
 
 import type { RavenDBAdapter, RavenDBAdapterArgs } from './types.js'
 
 import { connect } from './connect.js'
-import { init } from './init.js'
-import { destroy } from './destroy.js'
 import { count } from './count.js'
 import { countGlobalVersions } from './countGlobalVersions.js'
 import { countVersions } from './countVersions.js'
@@ -21,12 +19,14 @@ import { createVersion } from './createVersion.js'
 import { deleteMany } from './deleteMany.js'
 import { deleteOne } from './deleteOne.js'
 import { deleteVersions } from './deleteVersions.js'
+import { destroy } from './destroy.js'
 import { find } from './find.js'
 import { findDistinct } from './findDistinct.js'
 import { findGlobal } from './findGlobal.js'
 import { findGlobalVersions } from './findGlobalVersions.js'
 import { findOne } from './findOne.js'
 import { findVersions } from './findVersions.js'
+import { init } from './init.js'
 import { queryDrafts } from './queryDrafts.js'
 import { beginTransaction } from './transactions/beginTransaction.js'
 import { commitTransaction } from './transactions/commitTransaction.js'
@@ -45,14 +45,14 @@ declare module 'payload' {
 }
 
 export function ravendbAdapter({
-  url,
-  database,
-  certificate,
+  allowIDOnCreate = false,
   authOptions,
+  certificate,
+  database,
   migrationDir: migrationDirArg,
   prodMigrations,
   transactionOptions = {},
-  allowIDOnCreate = false,
+  url,
 }: RavenDBAdapterArgs): DatabaseAdapterObj {
   function adapter({ payload }: { payload: Payload }) {
     const migrationDir = findMigrationDir(migrationDirArg)
@@ -75,11 +75,11 @@ export function ravendbAdapter({
       name: 'ravendb',
 
       // RavenDB-specific
-      store,
       database,
-      sessions: {},
-      transactionOptions: transactionOptions === false ? false : transactionOptions,
       prodMigrations,
+      sessions: {},
+      store,
+      transactionOptions: transactionOptions === false ? false : transactionOptions,
 
       // DatabaseAdapter
       allowIDOnCreate,
@@ -156,4 +156,3 @@ function findMigrationDir(migrationDir?: string): string {
 
   return srcDir
 }
-

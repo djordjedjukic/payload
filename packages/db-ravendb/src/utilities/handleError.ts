@@ -16,13 +16,13 @@ export function handleError({
     if (error.message.includes('duplicate') || error.message.includes('unique')) {
       throw new ValidationError(
         {
+          collection,
           errors: [
             {
-              path: 'id',
               message: req?.t ? req.t('error:valueMustBeUnique') : 'Value must be unique',
+              path: 'id',
             },
           ],
-          collection,
           req,
         },
         req?.t,
@@ -34,4 +34,3 @@ export function handleError({
 
   throw new Error('An unknown error occurred')
 }
-

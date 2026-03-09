@@ -2,8 +2,8 @@ import type { FindDistinct } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
-import { getSession } from './utilities/getSession.js'
 import { getCollectionName } from './utilities/getCollectionName.js'
+import { getSession } from './utilities/getSession.js'
 
 export const findDistinct: FindDistinct = async function findDistinct(
   this: RavenDBAdapter,
@@ -31,7 +31,7 @@ export const findDistinct: FindDistinct = async function findDistinct(
 
     // extract distinct values for the field
     const values = new Set()
-    docs.forEach(doc => {
+    docs.forEach((doc) => {
       if (doc[field] !== undefined) {
         values.add(doc[field])
       }
@@ -45,4 +45,3 @@ export const findDistinct: FindDistinct = async function findDistinct(
     throw error
   }
 }
-

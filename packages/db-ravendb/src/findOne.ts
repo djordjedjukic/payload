@@ -2,10 +2,10 @@ import type { FindOne } from 'payload'
 
 import type { RavenDBAdapter } from './types.js'
 
+import { buildQuery } from './queries/buildQuery.js'
+import { getCollectionName } from './utilities/getCollectionName.js'
 import { getSession } from './utilities/getSession.js'
 import { transform } from './utilities/transform.js'
-import { getCollectionName } from './utilities/getCollectionName.js'
-import { buildQuery } from './queries/buildQuery.js'
 
 export const findOne: FindOne = async function findOne(
   this: RavenDBAdapter,
@@ -24,7 +24,11 @@ export const findOne: FindOne = async function findOne(
     const collectionName = getCollectionName(collectionSlug)
     let doc = null
 
-    console.log('[RavenDB] findOne:', { collectionSlug, collectionName, where: JSON.stringify(where, null, 2) })
+    console.log('[RavenDB] findOne:', {
+      collectionName,
+      collectionSlug,
+      where: JSON.stringify(where, null, 2),
+    })
 
     // if where has an id, we can load directly
     if (where.id && typeof where.id === 'object' && 'equals' in where.id) {
@@ -91,4 +95,3 @@ export const findOne: FindOne = async function findOne(
     throw error
   }
 }
-
