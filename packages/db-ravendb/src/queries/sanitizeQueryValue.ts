@@ -10,9 +10,6 @@ type SanitizedQueryValue = {
   val: unknown
 }
 
-/**
- * Sanitize and format query values based on field type
- */
 export function sanitizeQueryValue({
   adapter,
   collectionSlug,
@@ -36,8 +33,6 @@ export function sanitizeQueryValue({
 }): SanitizedQueryValue | undefined {
   let formattedValue = val
   let formattedOperator = operator
-
-  // handle null/undefined
   if (val === null || val === undefined) {
     if (operator === 'equals') {
       formattedOperator = 'exists'
@@ -47,26 +42,18 @@ export function sanitizeQueryValue({
       formattedValue = true
     }
   }
-
-  // handle number fields
   if (field.type === 'number' && typeof val === 'string') {
     const parsedNumber = parseFloat(val)
     if (!isNaN(parsedNumber)) {
       formattedValue = parsedNumber
     }
   }
-
-  // handle date fields
   if (field.type === 'date' && typeof val === 'string') {
     formattedValue = new Date(val).toISOString()
   }
-
-  // handle boolean fields
   if (field.type === 'checkbox' && typeof val === 'string') {
     formattedValue = val === 'true'
   }
-
-  // handle array values for 'in' and 'not_in' operators
   if ((operator === 'in' || operator === 'not_in' || operator === 'all') && Array.isArray(val)) {
     formattedValue = val.map((item) => {
       if (field.type === 'number' && typeof item === 'string') {
@@ -76,8 +63,6 @@ export function sanitizeQueryValue({
       return item
     })
   }
-
-  // handle relationship fields - ensure IDs are strings
   if ((field.type === 'relationship' || field.type === 'upload') && formattedValue) {
     if (Array.isArray(formattedValue)) {
       formattedValue = formattedValue.map((item) => String(item))
@@ -85,8 +70,6 @@ export function sanitizeQueryValue({
       formattedValue = String(formattedValue)
     }
   }
-
-  // handle ID field
   if (path === 'id' && formattedValue && collectionSlug) {
     const collectionName = getCollectionName(collectionSlug)
 
@@ -96,7 +79,6 @@ export function sanitizeQueryValue({
         formattedValue = isNaN(parsed) ? formattedValue : parsed
       }
     } else {
-      // ensure ID is string and add collection prefix if not present
       const addPrefix = (id: string) => {
         const idStr = String(id)
         return idStr.startsWith(`${collectionName}/`) ? idStr : `${collectionName}/${idStr}`
@@ -115,4 +97,3 @@ export function sanitizeQueryValue({
     val: formattedValue,
   }
 }
-

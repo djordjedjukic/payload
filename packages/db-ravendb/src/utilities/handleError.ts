@@ -12,7 +12,6 @@ export function handleError({
   req?: Partial<PayloadRequest>
 }): never {
   if (error instanceof Error) {
-    // handle validation errors
     if (error.message.includes('duplicate') || error.message.includes('unique')) {
       throw new ValidationError(
         {

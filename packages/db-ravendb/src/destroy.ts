@@ -4,18 +4,14 @@ import type { RavenDBAdapter } from './types.js'
 
 export const destroy: Destroy = function destroy(this: RavenDBAdapter) {
   try {
-    // dispose all active sessions
     Object.values(this.sessions).forEach((sessionWrapper) => {
       if (sessionWrapper) {
         sessionWrapper.db.dispose()
       }
     })
-
-    // clear sessions
     this.sessions = {}
 
-    // don't dispose the document store in dev mode (hot reload)
-    // only dispose in production or when explicitly shutting down
+    // Keep the store alive in development so hot reload does not thrash the shared connection.
     const isDev = process.env.NODE_ENV === 'development'
 
     if (!isDev && this.store) {

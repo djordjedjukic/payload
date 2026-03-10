@@ -46,8 +46,6 @@ export const find: Find = async function find(
     const collectionName = getCollectionName(collectionSlug)
 
     let query = session.query({ collection: collectionName })
-
-    // apply where conditions using the new query builder
     query = await buildQuery({
       adapter: this,
       collectionSlug,
@@ -57,16 +55,14 @@ export const find: Find = async function find(
       where,
     })
 
-    // wait for non-stale results to ensure we get the latest data
+    // RavenDB queries are stale-by-default, so wait for fresh indexed results.
     query = query.waitForNonStaleResults()
 
-    // apply sorting
     if (sortArg) {
       let sortField: string
       let sortOrder: 'asc' | 'desc' | -1 | 1
 
       if (typeof sortArg === 'string') {
-        // handle string format like "name" or "-name"
         if (sortArg.startsWith('-')) {
           sortField = sortArg.substring(1)
           sortOrder = 'desc'
@@ -75,7 +71,6 @@ export const find: Find = async function find(
           sortOrder = 'asc'
         }
       } else {
-        // handle object format like { name: 'asc' } or { name: -1 }
         sortField = Object.keys(sortArg)[0]
         sortOrder = sortArg[sortField]
       }
@@ -88,8 +83,6 @@ export const find: Find = async function find(
         query = query.orderBy(sortField)
       }
     }
-
-    // get total count for pagination (with same where conditions)
     let countQuery = session.query({ collection: collectionName })
     countQuery = await buildQuery({
       adapter: this,
@@ -100,8 +93,6 @@ export const find: Find = async function find(
       where,
     })
     const totalDocs = await countQuery.count()
-
-    // apply pagination
     if (pagination) {
       const skip = (page - 1) * limit
       query = query.skip(skip).take(limit)
@@ -128,13 +119,9 @@ export const find: Find = async function find(
     if (shouldCloseSession) {
       session.dispose()
     }
-
-    // transform all docs
     docs.forEach((doc) => {
       transform({ adapter: this, data: doc, fields: collectionConfig.fields, operation: 'read' })
     })
-
-    // resolve relationships/joins
     if (Object.keys(joins).length > 0) {
       await this.resolveRelationships({
         collectionSlug,

@@ -34,8 +34,6 @@ export const deleteOne: DeleteOne = async function deleteOne(
     if (!docId) {
       throw new Error('Document ID is required for delete')
     }
-
-    // load the document first to return it
     const doc = await session.load(docId)
 
     if (!doc) {
@@ -44,8 +42,6 @@ export const deleteOne: DeleteOne = async function deleteOne(
       }
       return null
     }
-
-    // delete the document
     await session.delete(docId)
 
     if (shouldCloseSession) {

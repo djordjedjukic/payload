@@ -15,17 +15,14 @@ export const connect: Connect = async function connect(
       throw new Error('Error: RavenDB DocumentStore not initialized.')
     }
 
-    // initialize the document store if not already initialized
-    // RavenDB's DocumentStore.initialize() is idempotent
+    // DocumentStore.initialize() is idempotent, so reconnect and hot-reload paths can call it safely.
     this.store.initialize()
 
-    // ensure database exists
     const { CreateDatabaseOperation, GetDatabaseRecordOperation } = await import('ravendb')
     try {
       await this.store.maintenance.server.send(new GetDatabaseRecordOperation(this.database))
     } catch (err: any) {
       if (err.name === 'DatabaseDoesNotExistException') {
-        // create database
         this.payload.logger.info(`Creating database: ${this.database}`)
         await this.store.maintenance.server.send(
           new CreateDatabaseOperation({ databaseName: this.database }),
@@ -42,7 +39,6 @@ export const connect: Connect = async function connect(
         this.payload.logger.info('---- DROPPING DATABASE ----')
 
         try {
-          // drop the entire database and recreate it
           const { CreateDatabaseOperation, DeleteDatabasesOperation } = await import('ravendb')
 
           await this.store.maintenance.server.send(
@@ -52,14 +48,12 @@ export const connect: Connect = async function connect(
             }),
           )
 
-          // recreate the database
           await this.store.maintenance.server.send(
             new CreateDatabaseOperation({ databaseName: this.database }),
           )
 
           this.payload.logger.info('---- DROPPED DATABASE ----')
         } catch (err: any) {
-          // if database doesn't exist, that's fine
           if (err.name !== 'DatabaseDoesNotExistException') {
             throw err
           }

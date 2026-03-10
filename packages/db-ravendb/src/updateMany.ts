@@ -22,8 +22,6 @@ export const updateMany: UpdateMany = async function updateMany(
     }
 
     const collectionName = getCollectionName(collectionSlug)
-
-    // build query to find documents
     let query = session.query({ collection: collectionName })
 
     if (where) {
@@ -36,20 +34,15 @@ export const updateMany: UpdateMany = async function updateMany(
       }) as any
     }
 
-    // get all matching documents
     const docs = await query.all()
 
     if (!docs || docs.length === 0) {
       return null
     }
 
-    // update each document
     const updatedDocs = []
     for (const doc of docs) {
-      // merge data
       Object.assign(doc, data)
-
-      // transform before saving
       transform({
         adapter: this,
         data: doc,
@@ -61,8 +54,6 @@ export const updateMany: UpdateMany = async function updateMany(
     }
 
     await session.saveChanges()
-
-    // transform for reading
     for (const doc of updatedDocs) {
       transform({
         adapter: this,

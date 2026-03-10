@@ -24,17 +24,13 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
     if (!session) {
       session = this.store.openSession(this.database)
     }
-
-    // query for global versions
     let query = session.query({ collection: 'globals_versions' })
-
-    // filter by global slug
     query = query.whereStartsWith('@id', `globals_versions/${globalSlug}/`)
 
     if (sortArg) {
       const sortField = typeof sortArg === 'string' ? sortArg : Object.keys(sortArg)[0]
       const sortOrder = typeof sortArg === 'string' ? 'asc' : sortArg[sortField]
-      
+
       if (sortOrder === 'desc' || sortOrder === -1) {
         query = query.orderByDescending(sortField)
       } else {
@@ -42,7 +38,8 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
       }
     }
 
-    const totalQuery = session.query({ collection: 'globals_versions' })
+    const totalQuery = session
+      .query({ collection: 'globals_versions' })
       .whereStartsWith('@id', `globals_versions/${globalSlug}/`)
     const totalDocs = await totalQuery.count()
 
@@ -99,4 +96,3 @@ export const findGlobalVersions: FindGlobalVersions = async function findGlobalV
     throw error
   }
 }
-

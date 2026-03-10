@@ -29,7 +29,6 @@ export async function parseParams({
   let result: QueryCondition = {}
 
   if (typeof where === 'object') {
-    // determine if the whereKey is an AND, OR, or a schema path
     for (const relationOrPath of Object.keys(where)) {
       const condition = where[relationOrPath]
       let conditionOperator: '$and' | '$or' | null = null
@@ -55,7 +54,6 @@ export async function parseParams({
           result[conditionOperator] = builtConditions
         }
       } else {
-        // it's a path - there can be multiple comparisons on a single path
         const pathOperators = where[relationOrPath]
 
         if (typeof pathOperators === 'object') {

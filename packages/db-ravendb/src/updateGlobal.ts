@@ -9,7 +9,7 @@ export const updateGlobal: UpdateGlobal = async function updateGlobal(
   this: RavenDBAdapter,
   { slug, data, req },
 ) {
-  const globalConfig = this.payload.globals.config.find(config => config.slug === slug)
+  const globalConfig = this.payload.globals.config.find((config) => config.slug === slug)
 
   let session = await getSession(this, req)
   const shouldCloseSession = !session
@@ -23,7 +23,6 @@ export const updateGlobal: UpdateGlobal = async function updateGlobal(
     let doc = await session.load(docId)
 
     if (!doc) {
-      // create if doesn't exist
       doc = {}
     }
 
@@ -67,4 +66,3 @@ export const updateGlobal: UpdateGlobal = async function updateGlobal(
     throw error
   }
 }
-

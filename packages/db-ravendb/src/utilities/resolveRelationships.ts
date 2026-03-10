@@ -17,10 +17,6 @@ export type ResolveRelationshipsArgs = {
   locale?: string
 }
 
-/**
- * Resolves relationship fields by loading related documents
- * This replaces IDs with full document objects
- */
 export async function resolveRelationships({
   adapter,
   collectionSlug,
@@ -33,8 +29,6 @@ export async function resolveRelationships({
   if (!docs || docs.length === 0 || depth === 0) {
     return
   }
-
-  // find all relationship fields
   const relationshipFields = fields.filter(
     (field) =>
       fieldAffectsData(field) && (field.type === 'relationship' || field.type === 'upload'),
@@ -47,9 +41,7 @@ export async function resolveRelationships({
   const session = adapter.store.openSession(adapter.database)
 
   try {
-    // process each document
     for (const doc of docs) {
-      // process each relationship field
       for (const field of relationshipFields) {
         const fieldValue = doc[field.name]
 
@@ -57,18 +49,15 @@ export async function resolveRelationships({
           continue
         }
 
-        // handle hasMany relationships (arrays)
         if ('hasMany' in field && (field as any).hasMany && Array.isArray(fieldValue)) {
           const populatedValues = []
 
           for (const item of fieldValue) {
-            // if it's already an object, skip
             if (typeof item === 'object' && item !== null) {
               populatedValues.push(item)
               continue
             }
 
-            // load the related document
             const relatedDoc = await loadRelatedDocument({
               id: item,
               adapter,
@@ -79,20 +68,16 @@ export async function resolveRelationships({
             if (relatedDoc) {
               populatedValues.push(relatedDoc)
             } else {
-              // keep the ID if we can't load the document
               populatedValues.push(item)
             }
           }
 
           doc[field.name] = populatedValues
         } else {
-          // single relationship
-          // if it's already an object, skip
           if (typeof fieldValue === 'object' && fieldValue !== null) {
             continue
           }
 
-          // load the related document
           const relatedDoc = await loadRelatedDocument({
             id: fieldValue,
             adapter,
@@ -103,7 +88,6 @@ export async function resolveRelationships({
           if (relatedDoc) {
             doc[field.name] = relatedDoc
           }
-          // else keep the ID
         }
       }
     }
@@ -124,16 +108,14 @@ async function loadRelatedDocument({
   session: any
 }): Promise<null | Record<string, unknown>> {
   try {
-    // determine which collection to load from
     let relationTo: string
 
     if (field.type === 'upload') {
       relationTo = field.relationTo
     } else if (field.type === 'relationship') {
-      // handle polymorphic relationships
       if (Array.isArray(field.relationTo)) {
-        // for polymorphic, we need to check which collection the ID belongs to
-        // for now, try each collection until we find it
+        // Polymorphic relationship values do not encode the collection,
+        // so probe each candidate collection until one matches.
         for (const collection of field.relationTo) {
           const collectionName = getCollectionName(collection)
           const fullId = `${collectionName}/${id}`
@@ -141,7 +123,6 @@ async function loadRelatedDocument({
           try {
             const doc = await session.load(fullId)
             if (doc) {
-              // transform the document
               const collectionConfig = adapter.payload.collections[collection]?.config
               if (collectionConfig) {
                 transform({
@@ -154,7 +135,6 @@ async function loadRelatedDocument({
               return doc
             }
           } catch (error) {
-            // try next collection
             continue
           }
         }
@@ -165,15 +145,12 @@ async function loadRelatedDocument({
     } else {
       return null
     }
-
-    // load the document
     const collectionName = getCollectionName(relationTo)
     const fullId = `${collectionName}/${id}`
 
     const doc = await session.load(fullId)
 
     if (doc) {
-      // transform the document
       const collectionConfig = adapter.payload.collections[relationTo]?.config
       if (collectionConfig) {
         transform({
@@ -187,7 +164,6 @@ async function loadRelatedDocument({
 
     return doc
   } catch (error) {
-    // if we can't load the document, return null
     return null
   }
 }

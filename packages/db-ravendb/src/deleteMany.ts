@@ -18,14 +18,10 @@ export const deleteMany: DeleteMany = async function deleteMany(
     }
 
     const collectionName = getCollectionName(collectionSlug)
-
-    // build query to find documents to delete
     const query = session.query({ collection: collectionName })
 
     // TODO: apply where conditions properly
     const docs = await query.all()
-
-    // delete all matching documents
     for (const doc of docs) {
       const id = doc?.['@metadata']?.['@id']
 
@@ -38,8 +34,6 @@ export const deleteMany: DeleteMany = async function deleteMany(
       await session.saveChanges()
       session.dispose()
     }
-
-    // deleteMany returns void
   } catch (error) {
     if (shouldCloseSession && session) {
       session.dispose()

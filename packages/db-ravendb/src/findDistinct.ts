@@ -28,8 +28,6 @@ export const findDistinct: FindDistinct = async function findDistinct(
     if (shouldCloseSession) {
       session.dispose()
     }
-
-    // extract distinct values for the field
     const values = new Set()
     docs.forEach((doc) => {
       if (doc[field] !== undefined) {

@@ -31,8 +31,6 @@ export async function buildQuery({
     parentIsLocalized: false,
     where,
   })
-
-  // apply conditions to the query
   return applyConditions(query, conditions)
 }
 
@@ -43,8 +41,6 @@ function applyConditions(
   if (!conditions) {
     return query
   }
-
-  // handle logical operators
   if (conditions.$and) {
     for (const condition of conditions.$and) {
       query = applyConditions(query, condition)
@@ -63,20 +59,16 @@ function applyConditions(
     query = query.closeSubclause()
     return query
   }
-
-  // handle field conditions
   for (const [path, value] of Object.entries(conditions)) {
     if (path.startsWith('$')) {
-      continue // skip logical operators
+      continue
     }
 
     if (typeof value === 'object' && value !== null) {
-      // handle operators
       for (const [operator, operatorValue] of Object.entries(value)) {
         query = applyOperator(query, path, operator, operatorValue)
       }
     } else {
-      // direct equality
       query = query.whereEquals(path, value)
     }
   }
@@ -123,11 +115,10 @@ function applyOperator(
       }
 
     case '$regex':
-      // RavenDB uses search() for text search
+      // RavenDB exposes text search through search() rather than a regex operator.
       return query.search(path, value.source || value)
 
     case '$all':
-      // all values must be in array
       if (Array.isArray(value)) {
         for (const item of value) {
           query = query.containsAll(path, [item])
@@ -136,7 +127,6 @@ function applyOperator(
       return query
 
     default:
-      // unsupported operator, skip
       return query
   }
 }
@@ -146,4 +136,3 @@ export type QueryCondition = {
   $or?: QueryCondition[]
   [key: string]: any
 }
-

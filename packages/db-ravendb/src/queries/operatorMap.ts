@@ -1,6 +1,4 @@
 export type OperatorMapKey = keyof typeof operatorMap
-
-// map Payload operators to internal query operators
 export const operatorMap = {
   all: '$all',
   contains: 'contains',

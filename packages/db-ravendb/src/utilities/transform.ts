@@ -11,20 +11,10 @@ interface TransformArgs {
   operation: 'read' | 'write'
 }
 
-/**
- * Transform data between Payload and RavenDB formats
- */
 export function transform({ adapter, data, fields, operation }: TransformArgs): void {
   const doc = data as any
 
   if (operation === 'write') {
-    // transform Payload data to RavenDB format
-    if (doc.id && !doc['@metadata']) {
-      // RavenDB uses @metadata for document metadata
-      // we'll store the id in the document itself
-    }
-
-    // add updatedAt timestamp
     if (!doc.updatedAt) {
       doc.updatedAt = new Date().toISOString()
     }

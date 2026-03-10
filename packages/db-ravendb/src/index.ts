@@ -57,12 +57,10 @@ export function ravendbAdapter({
   function adapter({ payload }: { payload: Payload }) {
     const migrationDir = findMigrationDir(migrationDirArg)
 
-    // create document store
     const store = Array.isArray(url)
       ? new DocumentStore(url, database)
       : new DocumentStore(url, database)
 
-    // configure authentication if provided
     if (certificate || authOptions?.certificate) {
       const cert = certificate || authOptions?.certificate
       if (cert) {
@@ -73,15 +71,6 @@ export function ravendbAdapter({
 
     return createDatabaseAdapter<RavenDBAdapter>({
       name: 'ravendb',
-
-      // RavenDB-specific
-      database,
-      prodMigrations,
-      sessions: {},
-      store,
-      transactionOptions: transactionOptions === false ? false : transactionOptions,
-
-      // DatabaseAdapter
       allowIDOnCreate,
       beginTransaction: transactionOptions === false ? defaultBeginTransaction() : beginTransaction,
       commitTransaction,
@@ -94,6 +83,7 @@ export function ravendbAdapter({
       createGlobalVersion,
       createMigration,
       createVersion,
+      database,
       defaultIDType: 'text',
       deleteMany,
       deleteOne,
@@ -109,9 +99,13 @@ export function ravendbAdapter({
       migrationDir,
       packageName: '@payloadcms/db-ravendb',
       payload,
+      prodMigrations,
       queryDrafts,
       resolveRelationships,
       rollbackTransaction,
+      sessions: {},
+      store,
+      transactionOptions: transactionOptions === false ? false : transactionOptions,
       updateGlobal,
       updateGlobalVersion,
       updateMany,
@@ -129,9 +123,6 @@ export function ravendbAdapter({
   }
 }
 
-/**
- * Attempt to find migrations directory.
- */
 function findMigrationDir(migrationDir?: string): string {
   const cwd = process.cwd()
   const srcDir = path.resolve(cwd, 'src/migrations')

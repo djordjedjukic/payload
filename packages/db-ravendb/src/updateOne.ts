@@ -23,13 +23,10 @@ export const updateOne: UpdateOne = async function updateOne(
     }
 
     const collectionName = getCollectionName(collectionSlug)
-
-    // find the document to update
     let docId: null | string = null
 
     if (where.id && typeof where.id === 'object' && 'equals' in where.id) {
       const idValue = String(where.id.equals)
-      // check if ID already has collection prefix
       if (idValue.startsWith(`${collectionName}/`)) {
         docId = idValue
       } else {
@@ -40,8 +37,6 @@ export const updateOne: UpdateOne = async function updateOne(
     if (!docId) {
       throw new Error('Document ID is required for update')
     }
-
-    // load the document
     const doc = await session.load(docId)
 
     if (!doc) {
@@ -50,8 +45,6 @@ export const updateOne: UpdateOne = async function updateOne(
       }
       return null
     }
-
-    // merge the data
     Object.assign(doc, data)
 
     transform({
@@ -71,8 +64,6 @@ export const updateOne: UpdateOne = async function updateOne(
       }
       return null
     }
-
-    // reload to get updated data
     const updatedDoc = await session.load(docId)
 
     if (shouldCloseSession) {

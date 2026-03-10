@@ -42,8 +42,6 @@ export const create: Create = async function create(
       fields: collectionConfig.fields,
       operation: 'write',
     })
-
-    // generate ID if not provided
     let docId = data.id as string
     if (!docId) {
       if (this.allowIDOnCreate && data.id) {
@@ -52,8 +50,6 @@ export const create: Create = async function create(
         docId = uuid()
       }
     }
-
-    // set the id on the data object
     data.id = docId
 
     const collectionName = getCollectionName(collectionSlug)
@@ -65,25 +61,18 @@ export const create: Create = async function create(
       fullId,
       hasData: !!data,
     })
-
-    // ensure @metadata exists and set the collection
     if (!data['@metadata']) {
       data['@metadata'] = {}
     }
     data['@metadata']['@collection'] = collectionName
     data['@metadata']['Raven-Node-Type'] = collectionName
-
-    // store the document
     await session.store(data, fullId)
 
     console.log('[RavenDB] Document stored, saving changes...')
 
-    // always save changes to persist the document to the database
-    // even if we're in a transaction, we need to save so queries can see the document
+    // Persist immediately so follow-up reads in the same request flow can see the new document.
     await session.saveChanges()
     console.log('[RavenDB] Changes saved successfully')
-
-    // only dispose the session if we created it
     if (shouldCloseSession) {
       session.dispose()
     }
@@ -91,9 +80,6 @@ export const create: Create = async function create(
     if (returning === false) {
       return null
     }
-
-    // the document is already in memory with all the data we need
-    // just transform it for reading
     transform({
       adapter: this,
       data,

@@ -15,9 +15,6 @@ type SearchParam = {
   value?: unknown
 }
 
-/**
- * Convert the Payload key / value / operator into a RavenDB query condition
- */
 export function buildSearchParam({
   adapter,
   collectionSlug,
@@ -39,7 +36,6 @@ export function buildSearchParam({
   parentIsLocalized: boolean
   val: unknown
 }): SearchParam | undefined {
-  // replace GraphQL nested field double underscore formatting
   let sanitizedPath = incomingPath.replace(/__/g, '.')
 
   if (sanitizedPath === 'id') {
@@ -117,10 +113,9 @@ export function buildSearchParam({
       return undefined
     }
 
-    // handle relationships - if querying across collections
     if (paths.length > 1) {
-      // TODO: implement relationship queries
-      // for now, just use the first path
+      // Multi-collection relationship filtering is not implemented yet,
+      // so fall back to the first resolved path.
       const operatorKey = operatorMap[formattedOperator as OperatorMapKey]
 
       if (operatorKey) {
@@ -134,17 +129,13 @@ export function buildSearchParam({
     if (formattedOperator && validOperatorSet.has(formattedOperator as Operator)) {
       const operatorKey = operatorMap[formattedOperator as OperatorMapKey]
 
-      // handle relationship fields
       if (field.type === 'relationship' || field.type === 'upload') {
-        // for relationships, we store IDs as strings
-        // handle both string and array values
         return {
           path,
           value: { [operatorKey]: formattedValue },
         }
       }
 
-      // handle 'like' operator - convert to regex
       if (formattedOperator === 'like' && typeof formattedValue === 'string') {
         const words = formattedValue.split(' ')
 
@@ -162,7 +153,6 @@ export function buildSearchParam({
         return result
       }
 
-      // handle 'not_like' operator
       if (formattedOperator === 'not_like' && typeof formattedValue === 'string') {
         const words = formattedValue.split(' ')
 
@@ -182,7 +172,6 @@ export function buildSearchParam({
         return result
       }
 
-      // handle 'contains' operator
       if (formattedOperator === 'contains' && typeof formattedValue === 'string') {
         return {
           path,
@@ -193,8 +182,7 @@ export function buildSearchParam({
         }
       }
 
-      // some operators like 'near' need to define a full query
-      // so if there is no operator key, just return the value
+      // Some operators are emitted as full query fragments instead of mapped operator objects.
       if (!operatorKey) {
         return {
           path,
